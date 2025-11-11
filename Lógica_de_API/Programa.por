@@ -116,7 +116,7 @@ programa
 						logico email_duplicado = falso
 						
 						escreva("Digite o novo E-Mail\n: ")
-						leia(novo_email) // LER UMA ÚNICA VEZ PARA A VARIÁVEL TEMPORÁRIA 'novo_email'
+						leia(novo_email)
 						
 						// 1. Validação de E-Mail (Formato)
 						se (t.posicao_texto("@", novo_email, 0) == -1){
@@ -125,8 +125,7 @@ programa
 							
 							// 2. Validação de existência de E-Mail (Duplicidade)
 							para (inteiro j=0; j < qtd_usuarios; j++) {
-								se (j != i) { // Ignora a posição do usuário que está sendo atualizado
-									// Compara o NOVO E-MAIL com os E-mails de outros usuários
+								se (j != i) {
 									se (novo_email == emails[j]){ 
 										escreva("\nERRO: Este E-Mail já está cadastrado!\n")
 										email_duplicado = verdadeiro
@@ -145,7 +144,7 @@ programa
 					}
 					
 					nome_encontrado = verdadeiro // Sai do WHILE principal de busca de nome
-					pare // Sai do FOR de busca de nome (i)
+					pare
 				}
 			}
 			
@@ -186,7 +185,7 @@ programa
 		qtd_usuarios--
 	}
 	
-	funcao inicio() {
+	funcao inicio() {
 
 		logico program = verdadeiro
 		inteiro opcao
@@ -234,7 +233,7 @@ programa
  * Esta seção do arquivo guarda informações do Portugol Studio.
  * Você pode apagá-la se estiver utilizando outro editor.
  * 
- * @POSICAO-CURSOR = 5142; 
+ * @POSICAO-CURSOR = 3227; 
  * @PONTOS-DE-PARADA = ;
  * @SIMBOLOS-INSPECIONADOS = ;
  * @FILTRO-ARVORE-TIPOS-DE-DADO = inteiro, real, logico, cadeia, caracter, vazio;
