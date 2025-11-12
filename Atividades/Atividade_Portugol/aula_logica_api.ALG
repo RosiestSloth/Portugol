@@ -1,8 +1,8 @@
-algoritmo "api_backend_crud_completo"
+algoritmo "api_backend_crud_completo_visualg"
 // Disciplina   : Desenvolvimento de API Backend (Simulação em Portugol)
 // Professor    : Vinícius Siqueira
 // Descrição    : CRUD de usuários, categorias e produtos em camadas
-// Autor(a)     : Vinícius Siqueira / Aluno (Módulos Categoria/Produto)
+// Autor(a)     : Vinícius Siqueira / Vinicius Santos 2310071
 // Data atual   : 10/11/2025
 
 var
@@ -56,20 +56,18 @@ inicio
 
    se emailExiste = verdadeiro entao
       escreval("Erro: este e-mail já está cadastrado.")
-      retorne
-   fimse
-   // ----------------------------------------
-
-   // Verificação de campos obrigatórios
-   se (Compr(nome) > 0) e (Compr(email) > 0) e (Compr(senha) > 0) entao
-      qtdUsuarios <- qtdUsuarios + 1
-      ids[qtdUsuarios]    <- qtdUsuarios
-      nomes[qtdUsuarios]  <- nome
-      emails[qtdUsuarios] <- email
-      senhas[qtdUsuarios] <- senha
-      escreval("Usuário cadastrado com sucesso!")
    senao
-      escreval("Erro: todos os campos são obrigatórios.")
+      // Verificação de campos obrigatórios
+      se (compr(nome) > 0) e (compr(email) > 0) e (compr(senha) > 0) entao
+         qtdUsuarios <- qtdUsuarios + 1
+         ids[qtdUsuarios]    <- qtdUsuarios
+         nomes[qtdUsuarios]  <- nome
+         emails[qtdUsuarios] <- email
+         senhas[qtdUsuarios] <- senha
+         escreval("Usuário cadastrado com sucesso!")
+      senao
+         escreval("Erro: todos os campos são obrigatórios.")
+      fimse
    fimse
 fimprocedimento
 
@@ -114,13 +112,17 @@ inicio
    escreval("Digite o ID do usuário para excluir:")
    leia(id)
    se (id >= 1) e (id <= qtdUsuarios) entao
+      // shift
       para i de id ate qtdUsuarios - 1 faca
-         ids[i]    <- ids[i + 1]
          nomes[i]  <- nomes[i + 1]
          emails[i] <- emails[i + 1]
          senhas[i] <- senhas[i + 1]
       fimpara
       qtdUsuarios <- qtdUsuarios - 1
+      // reindexa IDs
+      para i de 1 ate qtdUsuarios faca
+         ids[i] <- i
+      fimpara
       escreval("Usuário deletado com sucesso!")
    senao
       escreval("Usuário não encontrado.")
@@ -139,9 +141,8 @@ inicio
    leia(descricao)
 
    // Regra: O nome e a descrição não podem ser vazios.
-   se (Compr(nome) > 0) e (Compr(descricao) > 0) entao
+   se (compr(nome) > 0) e (compr(descricao) > 0) entao
       qtdCategorias <- qtdCategorias + 1
-      // Regra: IDs devem ser automáticos e sequenciais.
       ids_categoria[qtdCategorias]    <- qtdCategorias
       nomes_categoria[qtdCategorias]  <- nome
       descricoes_categoria[qtdCategorias] <- descricao
@@ -182,7 +183,7 @@ inicio
       leia(novaDesc)
 
       // Regra: O nome e a descrição não podem ser vazios.
-      se (Compr(novoNome) > 0) e (Compr(novaDesc) > 0) entao
+      se (compr(novoNome) > 0) e (compr(novaDesc) > 0) entao
          nomes_categoria[id]  <- novoNome
          descricoes_categoria[id] <- novaDesc
          escreval("Categoria atualizada com sucesso!")
@@ -205,7 +206,7 @@ inicio
 
    // Valida se ID existe
    se (id >= 1) e (id <= qtdCategorias) entao
-      // Regra: Ao excluir, verificar produtos vinculados.
+      // Verificar produtos vinculados.
       emUso <- falso
       para i de 1 ate qtdProdutos faca
          se ids_categoria_produto[i] = id entao
@@ -216,29 +217,28 @@ inicio
 
       se emUso = verdadeiro entao
          escreval("Erro: Esta categoria está sendo usada por um ou mais produtos e não pode ser excluída.")
-         escreval(">> Justificativa: A exclusão é barrada para manter a integridade dos dados e evitar que produtos fiquem 'órfãos' (sem categoria), o que violaria a regra de negócio do Módulo Produto.")
+         escreval(">> Justificativa: evitar produtos 'órfãos' de categoria.")
       senao
-         // Lógica de "shift" (puxar) para preencher o buraco no vetor
+         // shift
          para i de id ate qtdCategorias - 1 faca
-            ids_categoria[i]    <- ids_categoria[i + 1]
             nomes_categoria[i]  <- nomes_categoria[i + 1]
             descricoes_categoria[i] <- descricoes_categoria[i + 1]
-            
-            // ATENÇÃO: Esta lógica de shift exige que os IDs nos produtos
-            // também sejam atualizados, o que é complexo.
-            // No entanto, como IDs estão sendo reutilizados (ID 3 vira 2),
-            // precisamos corrigir os produtos que apontavam para IDs maiores.
          fimpara
          qtdCategorias <- qtdCategorias - 1
-         
-         // Corrigindo os IDs de categoria nos produtos
+
+         // reindexa IDs de categoria
+         para i de 1 ate qtdCategorias faca
+            ids_categoria[i] <- i
+         fimpara
+
+         // Ajusta chave estrangeira dos produtos (se > antigo ID, decrementa)
          para i de 1 ate qtdProdutos faca
             se ids_categoria_produto[i] > id entao
                ids_categoria_produto[i] <- ids_categoria_produto[i] - 1
             fimse
          fimpara
-         
-         escreval("Categoria deletada com sucesso! Os IDs das categorias seguintes foram reajustados.")
+
+         escreval("Categoria deletada com sucesso! IDs reajustados.")
       fimse
    senao
       escreval("Categoria não encontrada.")
@@ -253,50 +253,39 @@ var
    id_cat : inteiro
 inicio
    escreval("--- CADASTRAR PRODUTO ---")
-   
-   // Regra: Produto precisa de categoria. Verifica se existe alguma.
+
    se qtdCategorias = 0 entao
       escreval("Erro: Nenhuma categoria cadastrada. Cadastre uma categoria primeiro.")
-      retorne
+   senao
+      escreval("Digite o nome do produto:")
+      leia(nome)
+      escreval("Digite o preço unitário (ex: 19.99):")
+      leia(preco)
+
+      escreval("Categorias disponíveis:")
+      listarCategorias()
+      escreval("Digite o ID da categoria do produto:")
+      leia(id_cat)
+
+      se preco <= 0 entao
+         escreval("Erro: O preço deve ser maior que zero.")
+      senao
+         se (id_cat < 1) ou (id_cat > qtdCategorias) entao
+            escreval("Erro: ID de categoria inválido ou inexistente.")
+         senao
+            se compr(nome) = 0 entao
+               escreval("Erro: O nome do produto é obrigatório.")
+            senao
+               qtdProdutos <- qtdProdutos + 1
+               ids_produto[qtdProdutos]           <- qtdProdutos
+               nomes_produto[qtdProdutos]         <- nome
+               precos_unitario[qtdProdutos]       <- preco
+               ids_categoria_produto[qtdProdutos] <- id_cat
+               escreval("Produto cadastrado com sucesso! ID: ", qtdProdutos)
+            fimse
+         fimse
+      fimse
    fimse
-
-   escreval("Digite o nome do produto:")
-   leia(nome)
-   escreval("Digite o preço unitário (ex: 19.99):")
-   leia(preco)
-
-   // Regra: Ao cadastrar, exibir lista de categorias.
-   escreval("Categorias disponíveis:")
-   listarCategorias() // Reutiliza o procedimento
-   escreval("Digite o ID da categoria do produto:")
-   leia(id_cat)
-
-   // Regra: O preço deve ser maior que zero.
-   se preco <= 0 entao
-      escreval("Erro: O preço deve ser maior que zero.")
-      retorne
-   fimse
-
-   // Regra: O produto precisa estar sempre vinculado a uma categoria existente.
-   se (id_cat < 1) ou (id_cat > qtdCategorias) entao
-      escreval("Erro: ID de categoria inválido ou inexistente.")
-      retorne
-   fimse
-   
-   // Validação extra: nome do produto não pode ser vazio
-   se Compr(nome) = 0 entao
-      escreval("Erro: O nome do produto é obrigatório.")
-      retorne
-   fimse
-
-   // Tudo certo, cadastrar
-   qtdProdutos <- qtdProdutos + 1
-   ids_produto[qtdProdutos]           <- qtdProdutos
-   nomes_produto[qtdProdutos]         <- nome
-   precos_unitario[qtdProdutos]       <- preco
-   ids_categoria_produto[qtdProdutos] <- id_cat
-
-   escreval("Produto cadastrado com sucesso! ID: ", qtdProdutos)
 fimprocedimento
 
 procedimento listarProdutos()
@@ -310,13 +299,11 @@ inicio
    senao
       escreval("--- LISTA DE PRODUTOS ---")
       para i de 1 ate qtdProdutos faca
-         // Busca o nome da categoria usando o ID armazenado no produto
          id_cat_do_produto <- ids_categoria_produto[i]
          nome_cat_produto <- nomes_categoria[id_cat_do_produto]
-         
+
          escreval("ID: ", ids_produto[i], " | Nome: ", nomes_produto[i])
-         // Formata o preço para 2 casas decimais
-         escreval("  Preço: R$ ", precos_unitario[i]:0:2, " | Categoria: (ID ", id_cat_do_produto, ") ", nome_cat_produto)
+         escreval("  Preço: R$ ", precos_unitario[i], " | Categoria: (ID ", id_cat_do_produto, ") ", nome_cat_produto)
          escreval("-----------------------------")
       fimpara
    fimse
@@ -332,38 +319,33 @@ inicio
    escreval("Digite o ID do produto para atualizar:")
    leia(id)
 
-   // Valida se ID existe
    se (id >= 1) e (id <= qtdProdutos) entao
       escreval("Digite o novo nome (Atual: ", nomes_produto[id], "):")
       leia(novoNome)
-      escreval("Digite o novo preço (Atual: ", precos_unitario[id]:0:2, "):")
+      escreval("Digite o novo preço (Atual: ", precos_unitario[id], "):")
       leia(novoPreco)
 
-      // Regra: Exibir categorias para troca
       escreval("Categorias disponíveis:")
       listarCategorias()
       escreval("Digite o novo ID da categoria (Atual: ", ids_categoria_produto[id], "):")
       leia(id_cat)
 
-      // Validações de regras
       se novoPreco <= 0 entao
          escreval("Erro: O preço deve ser maior que zero.")
-         retorne
+      senao
+         se (id_cat < 1) ou (id_cat > qtdCategorias) entao
+            escreval("Erro: ID de categoria inválido.")
+         senao
+            se compr(novoNome) = 0 entao
+               escreval("Erro: O nome é obrigatório.")
+            senao
+               nomes_produto[id]           <- novoNome
+               precos_unitario[id]         <- novoPreco
+               ids_categoria_produto[id]   <- id_cat
+               escreval("Produto atualizado com sucesso!")
+            fimse
+         fimse
       fimse
-      se (id_cat < 1) ou (id_cat > qtdCategorias) entao
-         escreval("Erro: ID de categoria inválido.")
-         retorne
-      fimse
-      se Compr(novoNome) = 0 entao
-         escreval("Erro: O nome é obrigatório.")
-         retorne
-      fimse
-
-      // Atualiza
-      nomes_produto[id]           <- novoNome
-      precos_unitario[id]         <- novoPreco
-      ids_categoria_produto[id]   <- id_cat
-      escreval("Produto atualizado com sucesso!")
    senao
       escreval("Produto não encontrado.")
    fimse
@@ -375,17 +357,19 @@ inicio
    escreval("--- DELETAR PRODUTO ---")
    escreval("Digite o ID do produto para excluir:")
    leia(id)
-   
-   // Valida se ID existe
+
    se (id >= 1) e (id <= qtdProdutos) entao
-      // Lógica de "shift" (puxar)
+      // shift
       para i de id ate qtdProdutos - 1 faca
-         ids_produto[i]           <- ids_produto[i + 1]
          nomes_produto[i]         <- nomes_produto[i + 1]
          precos_unitario[i]       <- precos_unitario[i + 1]
          ids_categoria_produto[i] <- ids_categoria_produto[i + 1]
       fimpara
       qtdProdutos <- qtdProdutos - 1
+      // reindexa IDs
+      para i de 1 ate qtdProdutos faca
+         ids_produto[i] <- i
+      fimpara
       escreval("Produto deletado com sucesso!")
    senao
       escreval("Produto não encontrado.")
@@ -399,7 +383,7 @@ inicio
    qtdUsuarios <- 0
    qtdCategorias <- 0
    qtdProdutos <- 0
-   
+
    repita
       escreval("")
       escreval("======= API BACKEND EM PORTUGOL =======")
@@ -435,7 +419,7 @@ inicio
             atualizarUsuario()
          caso 4
             deletarUsuario()
-         
+
          // Categoria
          caso 5
             cadastrarCategoria()
@@ -445,7 +429,7 @@ inicio
             atualizarCategoria()
          caso 8
             deletarCategoria()
-            
+
          // Produto
          caso 9
             cadastrarProduto()
@@ -459,7 +443,7 @@ inicio
          // Saída
          caso 0
             escreval("Encerrando API...")
-         
+
          // Inválido
          outrocaso
             escreval("Opção inválida!")
